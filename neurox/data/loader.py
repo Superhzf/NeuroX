@@ -420,6 +420,7 @@ def load_data(
 
     """
     tokens = {"source": [], "target": []}
+    sample_idx = []
 
     with open(source_path) as source_fp:
         for line_idx, line in enumerate(source_fp):
@@ -430,6 +431,7 @@ def load_data(
                 line_tokens = line_tokens[1:]
                 activations[line_idx] = activations[line_idx][1:, :]
             tokens["source"].append(line_tokens)
+            sample_idx.append(line_idx)
 
     with open(labels_path) as labels_fp:
         for line in labels_fp:
@@ -492,14 +494,17 @@ def load_data(
         del activations[idx - num_deleted]
         del tokens["source"][idx - num_deleted]
         del tokens["target"][idx - num_deleted]
-
+        del sample_idx[idx - num_deleted]
+        assert len(sample_idx) == len(tokens["source"])
     for idx, activation in enumerate(activations):
         assert activation.shape[0] == len(tokens["source"][idx])
         if not sentence_classification:
             assert activation.shape[0] == len(tokens["target"][idx])
 
     # TODO: Return activations
-    return tokens
+    sample_idx = np.array(sample_idx)
+    assert len(sample_idx) == len(tokens["source"])
+    return tokens, sample_idx
 
 
 def load_sentence_data(source_path, labels_path, activations):

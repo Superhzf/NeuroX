@@ -84,6 +84,7 @@ def _train_probe(
     num_epochs=10,
     batch_size=32,
     learning_rate=0.001,
+    weight=None,
 ):
     """
     Internal helper method to train a linear probe.
@@ -130,14 +131,14 @@ def _train_probe(
 
     """
     progressbar = utils.get_progress_bar()
-    print("Training %s probe" % (task_type))
+    # print("Training %s probe" % (task_type))
     # Check if we can use GPU's for training
     use_gpu = torch.cuda.is_available()
 
     if lambda_l1 is None or lambda_l2 is None:
         raise ValueError("Regularization weights cannot be None")
 
-    print("Creating model...")
+    # print("Creating model...")
     if task_type == "classification":
         num_classes = len(set(y_train))
         if num_classes <= 1:
@@ -146,16 +147,25 @@ def _train_probe(
             )
     else:
         num_classes = 1
-    print("Number of training instances:", X_train.shape[0])
+    # print("Number of training instances:", X_train.shape[0])
     if task_type == "classification":
-        print("Number of classes:", num_classes)
+        # print("Number of classes:", num_classes)
+        pass
 
     probe = LinearProbe(X_train.shape[1], num_classes)
+    
+    #shape = probe.linear.weight.detach().numpy().shape
+    #import numpy as np
+    #thisRange = np.sqrt(1/X_train.shape[1])
+    #np.random.seed(1024)
+    #newWeight = np.random.uniform(-thisRange,thisRange,size=shape)
+    #probe.linear.weight=torch.nn.Parameter(torch.tensor(newWeight,dtype=torch.float32,requires_grad=True))
+
     if use_gpu:
         probe = probe.cuda()
 
     if task_type == "classification":
-        criterion = nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss(weight=weight)
     elif task_type == "regression":
         criterion = nn.MSELoss()
     else:
@@ -165,7 +175,7 @@ def _train_probe(
 
     X_tensor = torch.from_numpy(X_train)
     y_tensor = torch.from_numpy(y_train)
-
+    
     for epoch in range(num_epochs):
         num_tokens = 0
         avg_loss = 0
@@ -198,11 +208,21 @@ def _train_probe(
 
             avg_loss += loss.item()
 
-        print(
-            "Epoch: [%d/%d], Loss: %.4f"
-            % (epoch + 1, num_epochs, avg_loss / num_tokens)
-        )
+        #print(
+        #     "Epoch: [%d/%d], Loss: %.4f"
+        #    % (epoch + 1, num_epochs, avg_loss / num_tokens)
+        #)
 
+        #this_valid_score = evaluate_probe(probe,X_valid,y_valid)
+        #this_valid_accuracy = this_valid_score["__OVERALL__"]
+        #if this_valid_accuracy > best_valid_accuracy:
+        #    best_valid_accuracy = this_valid_accuracy
+        #    counter = 0
+        #else:
+        #    counter+=1
+        #    if counter >= patience:
+        #        print(f"Stops at epoch {i+1}")
+        #        return probe
     return probe
 
 
@@ -214,6 +234,7 @@ def train_logistic_regression_probe(
     num_epochs=10,
     batch_size=32,
     learning_rate=0.001,
+    weight = None,
 ):
     """
     Train a logistic regression probe.
@@ -264,6 +285,7 @@ def train_logistic_regression_probe(
         num_epochs=num_epochs,
         batch_size=batch_size,
         learning_rate=learning_rate,
+        weight = weight,
     )
 
 
@@ -460,7 +482,7 @@ def evaluate_probe(
 
     result = metrics.compute_score(y_pred, y, metric)
 
-    print("Score (%s) of the probe: %0.2f" % (metric, result))
+    # print("Score (%s) of the probe: %0.2f" % (metric, result))
 
     class_scores = {}
     class_scores["__OVERALL__"] = result

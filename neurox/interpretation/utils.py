@@ -102,7 +102,12 @@ def tok2idx(tokens):
         A dictionary with tokens as keys and a unique index for each token as
         values
     """
-    uniq_tokens = set().union(*tokens)
+    import collections
+    flat_tokens = [item for sublist in tokens for item in sublist]
+    count = collections.Counter(flat_tokens)
+    distribution = {k: v for k, v in sorted(count.items(), key=lambda item: item[1],reverse=True)}
+    uniq_tokens = list(distribution.keys())
+    #uniq_tokens = set().union(*tokens)
     return {p: idx for idx, p in enumerate(uniq_tokens)}
 
 

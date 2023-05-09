@@ -77,8 +77,8 @@ def get_top_words(tokens, activations, neuron, num_tokens=0, min_threshold=None)
     ]
 
     # Normalize scores by max
-    max_score = max([s for _, s in type_wise_scores])
-    type_wise_scores = [(k, v / max_score) for k, v in type_wise_scores]
+    # max_score = max([s for _, s in type_wise_scores])
+    # type_wise_scores = [(k, v / max_score) for k, v in type_wise_scores]
 
     # Sort and filter scores
     sorted_types_scores = sorted(type_wise_scores, key=lambda x: -x[1])

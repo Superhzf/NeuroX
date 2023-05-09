@@ -90,6 +90,7 @@ def extract_independent_neurons(X, use_abs_correlation=True, clustering_threshol
     independent_neurons = []
 
     for i in range(np.min(clusters), np.max(clusters) + 1):
+        np.random.seed(int(clustering_threshold)+1)
         independent_neurons.append(np.random.choice(np.where(clusters == i)[0]))
 
     return independent_neurons, clusters
