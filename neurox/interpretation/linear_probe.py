@@ -420,6 +420,7 @@ def evaluate_probe(
         probe = probe.cuda()
 
     # always evaluate in full precision
+    probe.eval()
     probe = probe.float()
 
     # Test the Model
@@ -435,48 +436,48 @@ def evaluate_probe(
     if return_predictions:
         predictions = []
         src_word = -1
+    with torch.no_grad():
+        for inputs, labels in progressbar(
+            utils.batch_generator(
+                torch.from_numpy(X), torch.from_numpy(y), batch_size=batch_size
+            ),
+            desc="Evaluating",
+        ):
+            if use_gpu:
+                inputs = inputs.cuda()
+                labels = labels.cuda()
 
-    for inputs, labels in progressbar(
-        utils.batch_generator(
-            torch.from_numpy(X), torch.from_numpy(y), batch_size=batch_size
-        ),
-        desc="Evaluating",
-    ):
-        if use_gpu:
-            inputs = inputs.cuda()
-            labels = labels.cuda()
+            # always evaluate in full precision
+            inputs = inputs.float()
 
-        # always evaluate in full precision
-        inputs = inputs.float()
+            inputs = Variable(inputs)
+            labels = Variable(labels)
 
-        inputs = Variable(inputs)
-        labels = Variable(labels)
+            outputs = probe(inputs)
 
-        outputs = probe(inputs)
-
-        if outputs.data.shape[1] == 1:
-            # Regression
-            predicted = outputs.data
-        else:
-            # Classification
-            _, predicted = torch.max(outputs.data, 1)
-        predicted = predicted.cpu().numpy()
-
-        for i in range(0, len(predicted)):
-            idx = predicted[i]
-            if idx_to_class:
-                key = idx_to_class[idx]
+            if outputs.data.shape[1] == 1:
+                # Regression
+                predicted = outputs.data
             else:
-                key = idx
+                # Classification
+                _, predicted = torch.max(outputs.data, 1)
+            predicted = predicted.cpu().numpy()
 
-            y_pred.append(predicted[i])
-
-            if return_predictions:
-                if source_tokens:
-                    src_word = next(src_words)
+            for i in range(0, len(predicted)):
+                idx = predicted[i]
+                if idx_to_class:
+                    key = idx_to_class[idx]
                 else:
-                    src_word = src_word + 1
-                predictions.append((src_word, key, labels[i].item() == idx))
+                    key = idx
+
+                y_pred.append(predicted[i])
+
+                if return_predictions:
+                    if source_tokens:
+                        src_word = next(src_words)
+                    else:
+                        src_word = src_word + 1
+                    predictions.append((src_word, key, labels[i].item() == idx))
 
     y_pred = np.array(y_pred)
 
