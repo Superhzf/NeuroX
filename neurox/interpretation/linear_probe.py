@@ -227,7 +227,9 @@ def _train_probe(
         else:
            counter+=1
            if counter >= patience:
+                print(f"Stopping at epoch {epoch+1}")
                return probe
+    print(f"Stopping at epoch {epoch+1}")
     return probe
 
 
