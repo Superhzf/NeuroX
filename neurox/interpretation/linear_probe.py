@@ -78,6 +78,8 @@ def l2_penalty(var):
 def _train_probe(
     X_train,
     y_train,
+    X_valid,
+    y_valid,
     task_type,
     lambda_l1=0,
     lambda_l2=0,
@@ -85,6 +87,7 @@ def _train_probe(
     batch_size=32,
     learning_rate=0.001,
     weight=None,
+    patience=2
 ):
     """
     Internal helper method to train a linear probe.
@@ -175,10 +178,13 @@ def _train_probe(
 
     X_tensor = torch.from_numpy(X_train)
     y_tensor = torch.from_numpy(y_train)
-    
+
+    best_valid_accuracy=0
+    counter=0
     for epoch in range(num_epochs):
         num_tokens = 0
         avg_loss = 0
+        probe.train()
         for inputs, labels in progressbar(
             utils.batch_generator(X_tensor, y_tensor, batch_size=batch_size),
             desc="epoch [%d/%d]" % (epoch + 1, num_epochs),
@@ -213,16 +219,15 @@ def _train_probe(
         #    % (epoch + 1, num_epochs, avg_loss / num_tokens)
         #)
 
-        #this_valid_score = evaluate_probe(probe,X_valid,y_valid)
-        #this_valid_accuracy = this_valid_score["__OVERALL__"]
-        #if this_valid_accuracy > best_valid_accuracy:
-        #    best_valid_accuracy = this_valid_accuracy
-        #    counter = 0
-        #else:
-        #    counter+=1
-        #    if counter >= patience:
-        #        print(f"Stops at epoch {i+1}")
-        #        return probe
+        this_valid_score = evaluate_probe(probe,X_valid,y_valid)
+        this_valid_accuracy = this_valid_score["__OVERALL__"]
+        if this_valid_accuracy > best_valid_accuracy:
+           best_valid_accuracy = this_valid_accuracy
+           counter = 0
+        else:
+           counter+=1
+           if counter >= patience:
+               return probe
     return probe
 
 
