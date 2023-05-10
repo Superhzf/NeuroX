@@ -288,6 +288,8 @@ def train_logistic_regression_probe(
     return _train_probe(
         X_train,
         y_train,
+        X_valid,
+        y_valid,
         task_type="classification",
         lambda_l1=lambda_l1,
         lambda_l2=lambda_l2,
@@ -295,6 +297,7 @@ def train_logistic_regression_probe(
         batch_size=batch_size,
         learning_rate=learning_rate,
         weight = weight,
+        patience=2
     )
 
 
