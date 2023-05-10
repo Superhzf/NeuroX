@@ -223,7 +223,6 @@ def _train_probe(
         this_valid_accuracy = this_valid_score["__OVERALL__"]
         if this_valid_accuracy > best_valid_accuracy:
            best_valid_accuracy = this_valid_accuracy
-           counter = 0
         else:
            counter+=1
            if counter >= patience:
@@ -236,12 +235,15 @@ def _train_probe(
 def train_logistic_regression_probe(
     X_train,
     y_train,
+    X_valid,
+    y_valid,
     lambda_l1=0,
     lambda_l2=0,
     num_epochs=10,
     batch_size=32,
     learning_rate=0.001,
     weight = None,
+    patience=2
 ):
     """
     Train a logistic regression probe.
