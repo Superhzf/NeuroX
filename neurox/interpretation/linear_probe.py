@@ -174,7 +174,8 @@ def _train_probe(
     else:
         raise ValueError("Invalid `task_type`")
 
-    optimizer = torch.optim.Adam(probe.parameters(), lr=learning_rate)
+    # optimizer = torch.optim.Adam(probe.parameters(), lr=learning_rate)
+    optimizer = torch.optim.SGD(probe.parameters(), lr=learning_rate)
 
     X_tensor = torch.from_numpy(X_train)
     y_tensor = torch.from_numpy(y_train)
